@@ -581,8 +581,8 @@ wv.layers.active = wv.layers.active || function(models, ui, config) {
             }
             else {
                 $zot.attr('title', 'Layer is zoomed by ' +
-                          (zoom - zoomLimit) * 100 + '%' );
-                if ( $layer.hasClass('zotted')  ) {
+                    Math.round(((zoom - zoomLimit) * 100)* 100) / 100 + '%' );
+                if ( $layer.hasClass('zotted')) {
                     $layer.removeClass('zotted');
                 }
             }
