@@ -551,7 +551,6 @@ wv.layers.active = wv.layers.active || function(models, ui, config) {
     var checkZots = function($layer, layer) {
         var map = ui.map;
         var zoom = map.selected.getView().getZoom();
-
         var sources = config.sources;
         var proj = models.proj.selected.id;
 
@@ -569,7 +568,7 @@ wv.layers.active = wv.layers.active || function(models, ui, config) {
             var $zot = $layer.find('div.zot');
             if(zoom > zoomLimit) {
                 $zot.attr('title', 'Layer is overzoomed by ' +
-                          (zoom - zoomLimit) * 100 + '%' );
+                    Math.round(((zoom - zoomLimit) * 100)* 100) / 100 + '%' );
 
                 if( !( $layer.hasClass('layer-hidden') ) &&
                     !( $layer.hasClass('zotted') ) ) {
