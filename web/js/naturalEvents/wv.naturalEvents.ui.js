@@ -336,9 +336,15 @@ wv.naturalEvents.ui = wv.naturalEvents.ui || function(models, ui, config, reques
         if ( event.geometries.length > 1 ) {
             var lastDate;
             var eventIndex = 0;
+            var geoLen = event.geometries.length;
             _.each(event.geometries, function(geometry, dateIndex) {
                 eventIndex++;
                 date = geometry.date.split(/T/)[0];
+                // If today's date is the last date return
+                if(date === event.geometries[(geoLen - 1)].date.split(/T/)[0]) {
+                    return;
+                }
+
                 var todayDateISOString = wv.util.toISOStringDate(wv.util.today());
 
                 if (date === lastDate){
