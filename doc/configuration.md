@@ -61,7 +61,7 @@ The minimum set of required properties are as follows:
 
 The following properties are required if this information is not available via the GIBS WMTS GetCapabilities document:
 
-- **type**: Tile service type, either *wmts* or *wms*.
+- **type**: Tile service type, either *wmts*, *wms*, or *vector*.
 - **format**: Image format type, either *image/png* or *image/jpeg*.
 - **tileSize**: For WMS layers only, an array of pixel dimensions used to tile the requests. For example, *[512, 512]*
 - **period**: Use *daily* for layers that have new content each day, otherwise use *static*.
