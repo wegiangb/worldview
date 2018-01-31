@@ -107,8 +107,8 @@ def process_layer(gc_layer, wv_layers, colormaps):
                     colormap_link = item["@xlink:href"]
                     colormap_file = os.path.basename(colormap_link)
                     colormap_id = os.path.splitext(colormap_file)[0]
-                    wv_layer["vectorStyle"] = {
-                        "id": colormap_id
+                    wv_layer["palette"] = {
+                        "id": colormap_link
                     }
 
 
