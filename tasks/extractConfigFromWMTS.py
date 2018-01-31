@@ -108,7 +108,7 @@ def process_layer(gc_layer, wv_layers, colormaps):
                     colormap_file = os.path.basename(colormap_link)
                     colormap_id = os.path.splitext(colormap_file)[0]
                     wv_layer["palette"] = {
-                        "id": colormap_link
+                        "id": colormap_id
                     }
 
 

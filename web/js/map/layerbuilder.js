@@ -117,8 +117,8 @@ export function mapLayerBuilder(models, config, cache, Parent) {
         }
         layer = createLayerVector(def, options, null, color);
         if (proj.id === 'geographic' && def.wrapadjacentdays === true) {
-          layerNext = createLayerVector(def, options, 1);
-          layerPrior = createLayerVector(def, options, -1);
+          layerNext = createLayerVector(def, options, 1, color);
+          layerPrior = createLayerVector(def, options, -1, color);
 
           layer.wv = attributes;
           layerPrior.wv = attributes;
@@ -482,7 +482,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
    * @returns {object} OpenLayers Vector layer
    */
   var createLayerVector = function(def, options, day, color) {
-    var date, extra, proj, start, extent, source, matrixSet, matrixIds, renderColor;
+    var date, urlParameters, proj, extent, source, matrixSet, matrixIds, start, renderColor;
     proj = models.proj.selected;
     source = config.sources[def.source];
     extent = proj.maxExtent;
@@ -515,83 +515,128 @@ export function mapLayerBuilder(models, config, cache, Parent) {
       }
     }
 
+    var layerName = def.layer || def.id;
+    var tms = def.matrixSet;
+
+    urlParameters = '?' +
+    '&layer=' + layerName +
+    '&tilematrixset=' + tms +
+    '&Service=WMTS' +
+    '&Request=GetTile' +
+    '&Version=1.0.0' +
+    '&FORMAT=application%2Fvnd.mapbox-vector-tile' +
+    '&TileMatrix={z}&TileCol={x}&TileRow={y}';
+
     if (def.period === 'daily') {
       date = options.date || models.date.selected;
       if (day) {
         date = util.dateAdd(date, 'day', day);
       }
-      extra = '?TIME=' + util.toISOStringDate(date);
+      urlParameters += '&TIME=' + util.toISOStringDate(date);
     }
-
-    var layerName = def.layer || def.id;
-    var tms = def.matrixSet;
 
     var layer = new LayerVectorTile({
       renderMode: 'image',
       preload: 1,
       extent: extent,
       source: new SourceVectorTile({
-        url: source.url + extra + '&layer=' + layerName + '&tilematrixset=' + tms + '&Service=WMTS&Request=GetTile&Version=1.0.0&FORMAT=application%2Fvnd.mapbox-vector-tile&TileMatrix={z}&TileCol={x}&TileRow={y}',
+        url: source.url + urlParameters,
+        layer: layerName,
+        crossOrigin: 'anonymous',
         format: new MVT(),
-        matrixSet: matrixSet.id,
-        tileGrid: new OlTileGridWMTS({
+        matrixSet: tms,
+        tileGrid: new OlTileGridTileGrid({
+          extent: extent,
           origin: start,
           resolutions: matrixSet.resolutions,
-          matrixIds: matrixIds,
-          tileSize: matrixSet.tileSize[0]
+          tileSize: matrixSet.tileSize
         })
       }),
-      style: new Style({
-        image: new Circle({
-          radius: 5,
-          fill: new Fill({ color: 'rgba(255,0,0,1)' })
-        })
-      })
+      // style: new Style({
+      //   image: new Circle({
+      //     radius: 5,
+      //     fill: new Fill({ color: 'rgba(255,0,0,1)' })
+      //   })
+      // })
     });
+
+    var jsonStyle = {
+      'styles': [
+        {
+          'name': 'Terra Ascending Orbit Tracks - Big Points',
+          'property': 'time',
+          'regex': '^[0-9][0-9]:[0-9][0,5]$',
+          'label': { 'property': 'label', 'stroke_color': 'rgb(128,128,128)', 'fill_color': 'rgb(255,255,255)' },
+          'size': 7.5,
+          'points': { 'color': 'rgb(242,135,34)', 'radius': 10 }
+        },
+        {
+          'name': 'Terra Ascending Orbit Tracks - Little Points',
+          'property': 'time',
+          'regex': '^[0-9][0-9]:[0-9][1,2,3,4,6,7,8,9]$',
+          'points': { 'color': 'rgb(242,135,34)', 'radius': 7.5 }
+        },
+        {
+          'name': 'Terra Ascending Orbit Tracks - Lines',
+          'lines': { 'color': 'rgb(242,135,34)', 'width': 5 }
+        }
+      ]
+    };
 
     /**
      * Style the vector based on feature tags outline in style json
      * @type {Boolean}
      */
-    var setColorFromAttribute = true;
+    var setColorFromAttribute = false;
     if (setColorFromAttribute) {
-      var newColor = util.rgbaToShortHex(color);
       layer.setStyle(function(feature, resolution) {
-        var confidence = feature.get('CONFIDENCE');
-        var dir = feature.get('dir');
-        if (confidence) {
-          renderColor = util.changeHue(newColor, confidence);
-          return [
-            new Style({
-              image: new Circle({
-                radius: 5,
-                fill: new Fill({ color: renderColor })
-              })
+        renderColor = color;
+        return [
+          new Style({
+            image: new Circle({
+              radius: 5,
+              fill: new Fill({ color: renderColor })
             })
-          ];
-        } else if (dir) {
-          var radian = dir * Math.PI / 180;
-          return [
-            new Style({
-              image: new Icon({
-                src: 'images/direction_arrow.png',
-                imgSize: [12, 12],
-                rotation: radian
-              })
-            })
-          ];
-        } else {
-          renderColor = color;
-          return [
-            new Style({
-              image: new Circle({
-                radius: 5,
-                fill: new Fill({ color: renderColor })
-              })
-            })
-          ];
-        }
+          })
+        ];
       });
+      // var newColor = util.rgbaToShortHex(color);
+      // layer.setStyle(function(feature, resolution) {
+      // var confidence = feature.get('CONFIDENCE');
+      // var dir = feature.get('dir');
+      // if (confidence) {
+      //   renderColor = util.changeHue(newColor, confidence);
+      //   return [
+      //     new Style({
+      //       image: new Circle({
+      //         radius: 5,
+      //         fill: new Fill({ color: renderColor })
+      //       })
+      //     })
+      //   ];
+      // } else if (dir) {
+      //   var radian = dir * Math.PI / 180;
+      //   return [
+      //     new Style({
+      //       image: new Icon({
+      //         src: 'images/direction_arrow.png',
+      //         imgSize: [12, 12],
+      //         rotation: radian
+      //       })
+      //     })
+      //   ];
+      // } else {
+      // renderColor = color;
+      // return [
+      //   new Style({
+      //     image: new Circle({
+      //       radius: 5,
+      //       fill: new Fill({ color: renderColor })
+      //     })
+      //   })
+      // ];
+      // }
+      // });
     }
 
     return layer;
