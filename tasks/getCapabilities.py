@@ -29,6 +29,7 @@ config_file = args[0]
 output_dir = args[1]
 colormaps = {}
 colormaps_dir = os.path.join(output_dir, "colormaps")
+vectorstyles_dir = os.path.join(output_dir, "vectorstyles")
 remote_count = 0
 error_count = 0
 warning_count = 0
@@ -87,11 +88,16 @@ def process_colormaps():
     sys.stdout.flush()
     if not os.path.exists(colormaps_dir):
         os.makedirs(colormaps_dir)
+    if not os.path.exists(vectorstyles_dir):
+        os.makedirs(vectorstyles_dir)
     for link in colormaps.values():
         try:
             response = urllib.urlopen(link)
             contents = response.read()
-            output_file = os.path.join(colormaps_dir, os.path.basename(link))
+            if link.endswith('.xml'):
+                output_file = os.path.join(colormaps_dir, os.path.basename(link))
+            if link.endswith('.json'):
+                output_file = os.path.join(vectorstyles_dir, os.path.basename(link))
             with open(output_file, "w") as fp:
                 fp.write(contents)
         except Exception as e:
