@@ -21,7 +21,9 @@ export function palettesModel(models, config) {
     var name = config.layers[layerId].palette.id;
     var palette = config.palettes.rendered[name];
     if (!lodashIsUndefined(index)) {
-      palette = palette.maps[index];
+      if (palette.maps) {
+        palette = palette.maps[index];
+      }
     }
     return palette;
   };
@@ -107,8 +109,11 @@ export function palettesModel(models, config) {
   };
 
   self.getCount = function (layerId) {
-    return self.getRendered(layerId)
-      .maps.length;
+    if (self.getRendered(layerId).maps) {
+      return self.getRendered(layerId).maps.length;
+    } else {
+      return 0;
+    }
   };
   /**
    * Gets a single colormap (entries / legend combo)
@@ -248,14 +253,14 @@ export function palettesModel(models, config) {
   };
 
   self.saveMulti = function (state, layerId) {
-    var palettes = [],
-      hasPalettes = false;
-    var min = [],
-      hasMin = false;
-    var max = [],
-      hasMax = false;
-    var squash = [],
-      hasSquash = false;
+    var palettes = [];
+    var hasPalettes = false;
+    var min = [];
+    var hasMin = false;
+    var max = [];
+    var hasMax = false;
+    var squash = [];
+    var hasSquash = false;
 
     for (var i = 0; i < self.getCount(layerId); i++) {
       var def = self.get(layerId, i);
@@ -347,8 +352,8 @@ export function palettesModel(models, config) {
     lodashEach(state.l, function (layerDef) {
       var layerId = layerDef.id;
       var minValue, maxValue;
-      var min = [],
-        max = [];
+      var min = [];
+      var max = [];
       var squash = [];
       var count = 0;
       lodashEach(layerDef.attributes, function (attr) {
