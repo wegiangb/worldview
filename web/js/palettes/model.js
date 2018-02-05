@@ -123,8 +123,8 @@ export function palettesModel(models, config) {
   };
 
   self.getCount = function (layerId) {
-    if (self.getRenderedPalette(layerId).maps) {
-      return self.getRenderedPalette(layerId).maps.length;
+    if (self.getRendered(layerId).maps) {
+      return self.getRendered(layerId).maps.length;
     } else {
       return 0;
     }
