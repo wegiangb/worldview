@@ -238,7 +238,10 @@ export function mapLayerBuilder(models, config, cache, Parent) {
    * @returns {object} OpenLayers Vector layer
    */
   var createLayerVector = function(def, options, day) {
+<<<<<<< HEAD
     // console.log(config);
+=======
+>>>>>>> 2b37f2c128734293812544a5a931b69ce7f35573
     var date, urlParameters, proj, extent, source, matrixSet, matrixIds, start, renderColor;
     var styleCache = {};
     proj = models.proj.selected;
