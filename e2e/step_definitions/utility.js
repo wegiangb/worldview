@@ -1,10 +1,10 @@
-const {client} = require('nightwatch-cucumber');
-const {defineSupportCode} = require('cucumber');
+const { client } = require('nightwatch-cucumber');
+const { defineSupportCode } = require('cucumber');
 const delay = client.globals.delay;
 const selectors = client.globals.selectors;
 const querystrings = client.globals.querystrings;
 
-defineSupportCode(({Given, Then, When}) => {
+defineSupportCode(({ Given, Then, When }) => {
   Given('Worldview is in {string} state', (state) => {
     var stateUrl = client.globals.url + (querystrings[state] || '');
     client.url(stateUrl).execute('if (window.localStorage) window.localStorage.clear()');
@@ -86,6 +86,10 @@ defineSupportCode(({Given, Then, When}) => {
   // Check for a string
   Then('I don\'t see {string}', (text) => {
     return client.useCss().expect.element('body').text.not.contains(text);
+  });
+  // check for string within element
+  Then('I see {string} in the {string}', (text, key) => {
+    return client.useCss().assert.containsText(selectors[key] || key, text);
   });
 
   // Check that an element is visible by predefined selector
