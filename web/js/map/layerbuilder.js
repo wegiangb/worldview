@@ -359,129 +359,165 @@ export function mapLayerBuilder(models, config, cache, Parent) {
     // ref: http://openlayers.org/en/v3.10.1/examples/kml-earthquakes.html
     // ref: http://openlayersbook.github.io/ch06-styling-vector-layers/example-07.html
     var styleOptions = function(feature, resolution) {
-      var featureStyle, color, width, radius, fill, stroke, image, text, label, labelFillColor, labelStrokeColor;
-      var layerStyles = config.vectorStyles.rendered[def.id].styles;
-      var styleGroup = Object.keys(layerStyles).map(e => layerStyles[e]);
-      var styleGroupCount = 0;
-      var matchedPropertyStyles = [];
-      var matchedLineStyles = [];
+      if (config.vectorStyles.rendered[def.id]) {
+        var featureStyle, color, width, radius, fill, stroke, image, text, label, labelFillColor, labelStrokeColor;
+        var layerStyles = config.vectorStyles.rendered[def.id].styles;
+        var styleGroup = Object.keys(layerStyles).map(e => layerStyles[e]);
+        var styleGroupCount = 0;
+        var matchedPropertyStyles = [];
+        var matchedLineStyles = [];
 
-      // Match JSON styles from GC to vector features and add styleValue to arrays
-      lodashEach(styleGroup, function(styleValues) {
-        let stylePropertyKey = styleValues.property;
-        if (stylePropertyKey in feature.properties_) matchedPropertyStyles.push(styleValues);
-        if (feature.type_ === 'LineString' && styleValues.lines) matchedLineStyles.push(styleValues);
-      });
+        // Match JSON styles from GC to vector features and add styleValue to arrays
+        lodashEach(styleGroup, function(styleValues) {
+          let stylePropertyKey = styleValues.property;
+          if (stylePropertyKey in feature.properties_) matchedPropertyStyles.push(styleValues);
+          if (feature.type_ === 'LineString' && styleValues.lines) matchedLineStyles.push(styleValues);
+        });
 
-      // Style vector points
-      lodashEach(matchedPropertyStyles, function(matchedStyle) {
-        styleGroupCount++;
-        let pointStyle = feature.get(matchedStyle.property) + '_' + styleGroupCount;
-        if (pointStyle) {
-          featureStyle = styleCache[pointStyle];
+        // Style vector points
+        lodashEach(matchedPropertyStyles, function(matchedStyle) {
+          styleGroupCount++;
+          let pointStyle = feature.get(matchedStyle.property) + '_' + styleGroupCount;
+          if (pointStyle) {
+            featureStyle = styleCache[pointStyle];
 
-          // If there is a range, style properties based on ranges
-          if (matchedStyle.range) {
-            let ranges = matchedStyle.range.split(',');
-            let lowRange = ranges[ranges.length - 2].substring(1).trim();
-            let highRange = ranges[ranges.length - 1].slice(0, -1).trim();
-            if (matchedStyle.range.startsWith('[') && matchedStyle.range.endsWith(']')) { // greater than or equal to + less than or equal to
-              if (feature.properties_[matchedStyle.property] >= lowRange && feature.properties_[matchedStyle.property] <= highRange) {
+            // If there is a range, style properties based on ranges
+            if (matchedStyle.range) {
+              let ranges = matchedStyle.range.split(',');
+              let lowRange = ranges[ranges.length - 2].substring(1).trim();
+              let highRange = ranges[ranges.length - 1].slice(0, -1).trim();
+              if (matchedStyle.range.startsWith('[') && matchedStyle.range.endsWith(']')) { // greater than or equal to + less than or equal to
+                if (feature.properties_[matchedStyle.property] >= lowRange && feature.properties_[matchedStyle.property] <= highRange) {
+                  color = matchedStyle.points.color;
+                }
+              } else if (matchedStyle.range.startsWith('[') && matchedStyle.range.endsWith(')')) { // greater than or equal to + less than
+                if (feature.properties_[matchedStyle.property] >= lowRange && feature.properties_[matchedStyle.property] < highRange) {
+                  color = matchedStyle.points.color;
+                }
+              } else if (matchedStyle.range.startsWith('(') && matchedStyle.range.endsWith(']')) { // greater than + less than or equal to
+                if (feature.properties_[matchedStyle.property] > lowRange && feature.properties_[matchedStyle.property] <= highRange) {
+                  color = matchedStyle.points.color;
+                }
+              } else if (matchedStyle.range.startsWith('(') && matchedStyle.range.endsWith(')')) { // greater than + less than
+                if (feature.properties_[matchedStyle.property] > lowRange && feature.properties_[matchedStyle.property] < highRange) {
+                  color = matchedStyle.points.color;
+                }
+              } else {
                 color = matchedStyle.points.color;
               }
-            } else if (matchedStyle.range.startsWith('[') && matchedStyle.range.endsWith(')')) { // greater than or equal to + less than
-              if (feature.properties_[matchedStyle.property] >= lowRange && feature.properties_[matchedStyle.property] < highRange) {
-                color = matchedStyle.points.color;
-              }
-            } else if (matchedStyle.range.startsWith('(') && matchedStyle.range.endsWith(']')) { // greater than + less than or equal to
-              if (feature.properties_[matchedStyle.property] > lowRange && feature.properties_[matchedStyle.property] <= highRange) {
-                color = matchedStyle.points.color;
-              }
-            } else if (matchedStyle.range.startsWith('(') && matchedStyle.range.endsWith(')')) { // greater than + less than
-              if (feature.properties_[matchedStyle.property] > lowRange && feature.properties_[matchedStyle.property] < highRange) {
-                color = matchedStyle.points.color;
-              }
-            } else {
-              color = matchedStyle.points.color;
             }
-          }
-          //  If there is a regexp and time property, style time vector points
-          else if (feature.properties_.time && matchedStyle.property === 'time' && matchedStyle.regex) {
-            let time = feature.properties_.time;
-            let pattern = new RegExp(matchedStyle.regex);
-            let timeTest = pattern.test(time);
-            if (timeTest) {
+            //  If there is a regexp and time property, style time vector points
+            else if (feature.properties_.time && matchedStyle.property === 'time' && matchedStyle.regex) {
+              let time = feature.properties_.time;
+              let pattern = new RegExp(matchedStyle.regex);
+              let timeTest = pattern.test(time);
+              if (timeTest) {
+                color = matchedStyle.points.color;
+                radius = matchedStyle.points.radius;
+                if (matchedStyle.label) {
+                  label = feature.properties_.time;
+                  labelFillColor = matchedStyle.label.fill_color;
+                  labelStrokeColor = matchedStyle.label.stroke_color;
+                }
+              }
+            }
+            // Else set default styles
+            else {
               color = matchedStyle.points.color;
               radius = matchedStyle.points.radius;
-              if (matchedStyle.label) {
-                label = feature.properties_.time;
-                labelFillColor = matchedStyle.label.fill_color;
-                labelStrokeColor = matchedStyle.label.stroke_color;
-              }
+              width = matchedStyle.points.width;
+            }
+
+            if (!featureStyle) {
+              fill = new Fill({
+                color: color || 'rgba(255, 255, 255, 0.4)'
+              });
+
+              stroke = new Stroke({
+                color: color || 'rgb(51, 153, 204, 1)',
+                width: width || 1.25
+              });
+
+              image = new Circle({
+                fill: fill,
+                stroke: stroke,
+                radius: radius || 5
+              });
+
+              text = new Text({
+                text: label || '',
+                fill: new Fill({
+                  color: labelFillColor || 'rgba(255, 255, 255, 1)'
+                }),
+                stroke: new Stroke({
+                  color: labelStrokeColor || 'rgba(255, 255, 255, 1)'
+                }),
+                font: '9px sans-serif',
+                offsetX: 24
+              });
+
+              featureStyle = new Style({
+                fill: fill,
+                stroke: stroke,
+                image: image,
+                text: text
+              });
+              styleCache[pointStyle] = featureStyle;
             }
           }
-          // Else set default styles
-          else {
-            color = matchedStyle.points.color;
-            radius = matchedStyle.points.radius;
-            width = matchedStyle.points.width;
-          }
+        });
+
+        // Style vector lines
+        lodashEach(matchedLineStyles, function(matchedStyle) {
+          let lineStyle = feature.type;
+          let lineColor = matchedStyle.lines.color;
+          let lineWidth = matchedStyle.lines.width;
 
           if (!featureStyle) {
-            fill = new Fill({
-              color: color || 'rgba(255, 255, 255, 0.4)'
-            });
-
-            stroke = new Stroke({
-              color: color || 'rgb(51, 153, 204, 1)',
-              width: width || 1.25
-            });
-
-            image = new Circle({
-              fill: fill,
-              stroke: stroke,
-              radius: radius || 5
-            });
-
-            text = new Text({
-              text: label || '',
-              fill: new Fill({
-                color: labelFillColor || 'rgba(255, 255, 255, 1)'
-              }),
-              stroke: new Stroke({
-                color: labelStrokeColor || 'rgba(255, 255, 255, 1)'
-              }),
-              font: '9px sans-serif',
-              offsetX: 24
-            });
-
             featureStyle = new Style({
-              fill: fill,
-              stroke: stroke,
-              image: image,
-              text: text
+              stroke: new Stroke({
+                color: lineColor || '#3399CC',
+                width: lineWidth || 1.25
+              })
             });
-            styleCache[pointStyle] = featureStyle;
+            styleCache[lineStyle] = featureStyle;
           }
-        }
-      });
+        });
+      } else {
+        fill = new Fill({
+          color: color || 'rgba(255, 255, 255, 0.4)'
+        });
 
-      // Style vector lines
-      lodashEach(matchedLineStyles, function(matchedStyle) {
-        let lineStyle = feature.type;
-        let lineColor = matchedStyle.lines.color;
-        let lineWidth = matchedStyle.lines.width;
+        stroke = new Stroke({
+          color: color || 'rgb(51, 153, 204, 1)',
+          width: width || 1.25
+        });
 
-        if (!featureStyle) {
-          featureStyle = new Style({
-            stroke: new Stroke({
-              color: lineColor || '#3399CC',
-              width: lineWidth || 1.25
-            })
-          });
-          styleCache[lineStyle] = featureStyle;
-        }
-      });
+        image = new Circle({
+          fill: fill,
+          stroke: stroke,
+          radius: radius || 5
+        });
+
+        text = new Text({
+          text: label || '',
+          fill: new Fill({
+            color: labelFillColor || 'rgba(255, 255, 255, 1)'
+          }),
+          stroke: new Stroke({
+            color: labelStrokeColor || 'rgba(255, 255, 255, 1)'
+          }),
+          font: '9px sans-serif',
+          offsetX: 24
+        });
+
+        featureStyle = new Style({
+          fill: fill,
+          stroke: stroke,
+          image: image,
+          text: text
+        });
+      }
 
       // The style for this feature is in the cache. Return it as an array
       return featureStyle;
