@@ -8,17 +8,10 @@ import OlLayerTile from 'ol/layer/tile';
 import OlTileGridTileGrid from 'ol/tilegrid/tilegrid';
 import Style from 'ol/style/style';
 import Circle from 'ol/style/circle';
-import Text  from 'ol/style/text';
+import Icon from 'ol/style/icon';
 import Fill from 'ol/style/fill';
 import MVT from 'ol/format/mvt';
 import Stroke from 'ol/style/stroke';
-import LayerVectorTile from 'ol/layer/vectortile';
-import SourceVectorTile from 'ol/source/vectortile';
-import Style from 'ol/style/style';
-import Circle from 'ol/style/circle';
-import Fill from 'ol/style/fill';
-import MVT from 'ol/format/mvt';
-import Icon from 'ol/style/icon';
 import LayerVectorTile from 'ol/layer/vectortile';
 import SourceVectorTile from 'ol/source/vectortile';
 import lodashCloneDeep from 'lodash/cloneDeep';
@@ -47,7 +40,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
    * @returns {object} OpenLayers layer
    */
   self.createLayer = function (def, options) {
-    var date, key, proj, layer, layerNext, layerPrior, attributes;
+    var color, hexColor, date, key, proj, layer, layerNext, layerPrior, attributes;
     options = options || {};
     date = self.closestDate(def, options);
     key = self.layerKey(def, options, date);
@@ -239,9 +232,8 @@ export function mapLayerBuilder(models, config, cache, Parent) {
       if (day) {
         date = util.dateAdd(date, 'day', day);
       }
-      urlParameters = '&TIME=' + util.toISOStringDate(date);
+      urlParameters = '&TIME=' + util.toISOStringSeconds(util.roundTimeOneMinute(date));
     }
-    extra = '?TIME=' + util.toISOStringSeconds(util.roundTimeOneMinute(date));
 
     var sourceOptions = {
       url: source.url + urlParameters,
@@ -287,7 +279,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
    * @returns {object} OpenLayers Vector layer
    */
   var createLayerVector = function(def, options, day) {
-    var date, urlParameters, proj, extent, source, matrixSet, matrixIds, start, renderColor;
+    var date, urlParameters, proj, extent, source, matrixSet, matrixIds, start;
     var styleCache = {};
     proj = models.proj.selected;
     source = config.sources[def.source];
@@ -586,9 +578,8 @@ export function mapLayerBuilder(models, config, cache, Parent) {
       if (day) {
         date = util.dateAdd(date, 'day', day);
       }
-      urlParameters += 'TIME=' + util.toISOStringDate(date);
+      urlParameters += 'TIME=' + util.toISOStringSeconds(util.roundTimeOneMinute(date));
     }
-    extra = '?TIME=' + util.toISOStringSeconds(util.roundTimeOneMinute(date));
 
     var sourceOptions = {
       url: source.url + urlParameters,
