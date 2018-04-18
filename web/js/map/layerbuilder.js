@@ -352,7 +352,11 @@ export function mapLayerBuilder(models, config, cache, Parent) {
     // ref: http://openlayers.org/en/v3.10.1/examples/kml-earthquakes.html
     // ref: http://openlayersbook.github.io/ch06-styling-vector-layers/example-07.html
     var featureStyles = function(feature, resolution) {
-      var featureStyle, color, width, radius, fill, stroke, image, text, label, labelFillColor, labelStrokeColor;
+      var featureStyle, color, fill, stroke, image, text, label, labelFillColor, labelStrokeColor;
+      var fillColor = 'rgba(255,255,255,0.4)';
+      var strokeColor = '#3399CC';
+      var width = 1.25;
+      var radius = 5;
       if (config.vectorStyles.rendered[def.id]) {
         var layerStyles = config.vectorStyles.rendered[def.id].styles;
         var styleGroup = Object.keys(layerStyles).map(e => layerStyles[e]);
@@ -374,11 +378,11 @@ export function mapLayerBuilder(models, config, cache, Parent) {
         featureStyle = styleCache['default'];
 
         let defaultFill = new Fill({
-          color: 'rgba(255,255,255,0.4)'
+          color: fillColor
         });
         let deafultStroke = new Stroke({
-          color: '#3399CC',
-          width: 1.25
+          color: strokeColor,
+          width: width
         });
 
         if (!featureStyle) {
@@ -386,7 +390,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
             image: new Circle({
               fill: defaultFill,
               stroke: deafultStroke,
-              radius: 5
+              radius: radius
             }),
             fill: defaultFill,
             stroke: deafultStroke
@@ -448,27 +452,27 @@ export function mapLayerBuilder(models, config, cache, Parent) {
 
             if (!featureStyle) {
               fill = new Fill({
-                color: color || 'rgba(255, 255, 255, 0.4)'
+                color: color || fillColor
               });
 
               stroke = new Stroke({
-                color: color || 'rgb(51, 153, 204, 1)',
-                width: width || 1.25
+                color: color || strokeColor,
+                width: width
               });
 
               image = new Circle({
                 fill: fill,
                 stroke: stroke,
-                radius: radius || 5
+                radius: radius
               });
 
               text = new Text({
                 text: label || '',
                 fill: new Fill({
-                  color: labelFillColor || 'rgba(255, 255, 255, 1)'
+                  color: labelFillColor || fillColor
                 }),
                 stroke: new Stroke({
-                  color: labelStrokeColor || 'rgba(255, 255, 255, 1)'
+                  color: labelStrokeColor || strokeColor
                 }),
                 font: '9px sans-serif',
                 offsetX: 24
@@ -480,6 +484,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
                 image: image,
                 text: text
               });
+
               styleCache[pointStyle] = featureStyle;
             }
           }
@@ -490,14 +495,22 @@ export function mapLayerBuilder(models, config, cache, Parent) {
           let lineStyle = feature.type;
           let lineColor = matchedStyle.lines.color;
           let lineWidth = matchedStyle.lines.width;
-
+          let width = lineWidth || 1.25;
           if (!featureStyle) {
-            featureStyle = new Style({
-              stroke: new Stroke({
-                color: lineColor || '#3399CC',
-                width: lineWidth || 1.25
-              })
+            var stroke = new Stroke({
+              color: lineColor || '#3399CC',
+              width: width
             });
+
+            featureStyle = new Style({
+              stroke: stroke
+            });
+
+            if ((width / (resolution * 100)) > width) {
+              width = width / (resolution * 100);
+            }
+
+            stroke.setWidth(width);
             styleCache[lineStyle] = featureStyle;
           }
         });
@@ -506,7 +519,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
       return featureStyle;
     };
     var layer = new LayerVectorTile({
-      renderMode: 'image',
+      renderMode: 'vector',
       preload: 1,
       extent: extent,
       source: sourceOptions,
