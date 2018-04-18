@@ -8,8 +8,8 @@ import OlLayerTile from 'ol/layer/tile';
 import OlTileGridTileGrid from 'ol/tilegrid/tilegrid';
 import Style from 'ol/style/style';
 import Circle from 'ol/style/circle';
-import Icon from 'ol/style/icon';
 import Fill from 'ol/style/fill';
+import Text from 'ol/style/text';
 import MVT from 'ol/format/mvt';
 import Stroke from 'ol/style/stroke';
 import LayerVectorTile from 'ol/layer/vectortile';
@@ -17,6 +17,7 @@ import SourceVectorTile from 'ol/source/vectortile';
 import lodashCloneDeep from 'lodash/cloneDeep';
 import lodashMerge from 'lodash/merge';
 import lodashEach from 'lodash/each';
+import lodashIsEmpty from 'lodash/isEmpty';
 import { lookupFactory } from '../ol/lookupimagetile';
 
 export function mapLayerBuilder(models, config, cache, Parent) {
@@ -40,7 +41,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
    * @returns {object} OpenLayers layer
    */
   self.createLayer = function (def, options) {
-    var color, hexColor, date, key, proj, layer, layerNext, layerPrior, attributes;
+    var date, key, proj, layer, layerNext, layerPrior, attributes;
     options = options || {};
     date = self.closestDate(def, options);
     key = self.layerKey(def, options, date);
@@ -350,22 +351,49 @@ export function mapLayerBuilder(models, config, cache, Parent) {
     // Create style options and store them in a styleCache Object
     // ref: http://openlayers.org/en/v3.10.1/examples/kml-earthquakes.html
     // ref: http://openlayersbook.github.io/ch06-styling-vector-layers/example-07.html
-    var styleOptions = function(feature, resolution) {
+    var featureStyles = function(feature, resolution) {
+      var featureStyle, color, width, radius, fill, stroke, image, text, label, labelFillColor, labelStrokeColor;
       if (config.vectorStyles.rendered[def.id]) {
-        var featureStyle, color, width, radius, fill, stroke, image, text, label, labelFillColor, labelStrokeColor;
         var layerStyles = config.vectorStyles.rendered[def.id].styles;
         var styleGroup = Object.keys(layerStyles).map(e => layerStyles[e]);
-        var styleGroupCount = 0;
-        var matchedPropertyStyles = [];
-        var matchedLineStyles = [];
+      }
+      var styleGroupCount = 0;
+      var matchedPropertyStyles = [];
+      var matchedLineStyles = [];
 
+      if (config.vectorStyles.rendered[def.id]) {
         // Match JSON styles from GC to vector features and add styleValue to arrays
         lodashEach(styleGroup, function(styleValues) {
           let stylePropertyKey = styleValues.property;
           if (stylePropertyKey in feature.properties_) matchedPropertyStyles.push(styleValues);
           if (feature.type_ === 'LineString' && styleValues.lines) matchedLineStyles.push(styleValues);
         });
+      }
 
+      if (lodashIsEmpty(matchedPropertyStyles) && lodashIsEmpty(matchedLineStyles)) {
+        featureStyle = styleCache['default'];
+
+        let defaultFill = new Fill({
+          color: 'rgba(255,255,255,0.4)'
+        });
+        let deafultStroke = new Stroke({
+          color: '#3399CC',
+          width: 1.25
+        });
+
+        if (!featureStyle) {
+          featureStyle = new Style({
+            image: new Circle({
+              fill: defaultFill,
+              stroke: deafultStroke,
+              radius: 5
+            }),
+            fill: defaultFill,
+            stroke: deafultStroke
+          });
+          styleCache['default'] = featureStyle;
+        }
+      } else {
         // Style vector points
         lodashEach(matchedPropertyStyles, function(matchedStyle) {
           styleGroupCount++;
@@ -397,9 +425,8 @@ export function mapLayerBuilder(models, config, cache, Parent) {
               } else {
                 color = matchedStyle.points.color;
               }
-            }
             //  If there is a regexp and time property, style time vector points
-            else if (feature.properties_.time && matchedStyle.property === 'time' && matchedStyle.regex) {
+            } else if (feature.properties_.time && matchedStyle.property === 'time' && matchedStyle.regex) {
               let time = feature.properties_.time;
               let pattern = new RegExp(matchedStyle.regex);
               let timeTest = pattern.test(time);
@@ -412,9 +439,8 @@ export function mapLayerBuilder(models, config, cache, Parent) {
                   labelStrokeColor = matchedStyle.label.stroke_color;
                 }
               }
-            }
             // Else set default styles
-            else {
+            } else {
               color = matchedStyle.points.color;
               radius = matchedStyle.points.radius;
               width = matchedStyle.points.width;
@@ -475,52 +501,16 @@ export function mapLayerBuilder(models, config, cache, Parent) {
             styleCache[lineStyle] = featureStyle;
           }
         });
-      } else {
-        fill = new Fill({
-          color: color || 'rgba(255, 255, 255, 0.4)'
-        });
-
-        stroke = new Stroke({
-          color: color || 'rgb(51, 153, 204, 1)',
-          width: width || 1.25
-        });
-
-        image = new Circle({
-          fill: fill,
-          stroke: stroke,
-          radius: radius || 5
-        });
-
-        text = new Text({
-          text: label || '',
-          fill: new Fill({
-            color: labelFillColor || 'rgba(255, 255, 255, 1)'
-          }),
-          stroke: new Stroke({
-            color: labelStrokeColor || 'rgba(255, 255, 255, 1)'
-          }),
-          font: '9px sans-serif',
-          offsetX: 24
-        });
-
-        featureStyle = new Style({
-          fill: fill,
-          stroke: stroke,
-          image: image,
-          text: text
-        });
       }
-
       // The style for this feature is in the cache. Return it as an array
       return featureStyle;
     };
-
     var layer = new LayerVectorTile({
       renderMode: 'image',
       preload: 1,
       extent: extent,
       source: sourceOptions,
-      style: styleOptions
+      style: featureStyles
     });
 
     return layer;
