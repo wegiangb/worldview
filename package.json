@@ -42,7 +42,7 @@
     "lint:css": "stylelint ./web/css/**/*.css",
     "lint:js": "eslint .",
     "preinstall": "node tasks/checkNodeVersion.js",
-    "postinstall": "npm run python",
+    "postinstall": "npm run python && npm install -g grunt-cli && IGNORE_ERRORS=true npm run build",
     "python": "virtualenv .python && run-script-os",
     "python:darwin:linux": "PATH=.python/bin:${PATH} pip install -r requirements.txt",
     "python:win32": "bash -c 'PATH=.python/Scripts:${PATH} pip install -r requirements.txt'",
