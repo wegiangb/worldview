@@ -348,15 +348,32 @@ export function mapLayerBuilder(models, config, cache, Parent) {
       })
     });
 
+    var scaleFeature = function (base, resolution) {
+      // var zoom = map.getView()
+      //   .getZoom();
+      // var zoom = resolution;
+      // Minimum size of the button is 15 pixels
+      base = 5;
+      // Double the size for each zoom level
+      var add = Math.pow(2, resolution);
+      // But 47 pixels is the maximum size
+      var size = Math.min(base + add, base + 32);
+      return {
+        scale: size / 48,
+        size: size
+      };
+    };
+
     // Create style options and store them in a styleCache Object
     // ref: http://openlayers.org/en/v3.10.1/examples/kml-earthquakes.html
     // ref: http://openlayersbook.github.io/ch06-styling-vector-layers/example-07.html
     var featureStyles = function(feature, resolution) {
-      var featureStyle, color, fill, stroke, image, text, label, labelFillColor, labelStrokeColor;
+      var featureStyle, dimensions, color, fill, stroke, image, text, label, labelFillColor, labelStrokeColor;
       var fillColor = 'rgba(255,255,255,0.4)';
       var strokeColor = '#3399CC';
       var width = 1.25;
       var radius = 5;
+
       if (config.vectorStyles.rendered[def.id]) {
         var layerStyles = config.vectorStyles.rendered[def.id].styles;
         var styleGroup = Object.keys(layerStyles).map(e => layerStyles[e]);
@@ -451,6 +468,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
             }
 
             if (!featureStyle) {
+
               fill = new Fill({
                 color: color || fillColor
               });
@@ -485,6 +503,17 @@ export function mapLayerBuilder(models, config, cache, Parent) {
                 text: text
               });
 
+              var radiusDimensions = scaleFeature(radius, resolution);
+              radius = radiusDimensions.size;
+
+              var widthDimensions = scaleFeature(width, resolution);
+              width = widthDimensions.size;
+              // if ((width / (resolution * 100)) > width) {
+              //   width = width / (resolution * 100);
+              // }
+
+              stroke.setWidth(width);
+
               styleCache[pointStyle] = featureStyle;
             }
           }
@@ -496,6 +525,7 @@ export function mapLayerBuilder(models, config, cache, Parent) {
           let lineColor = matchedStyle.lines.color;
           let lineWidth = matchedStyle.lines.width;
           let width = lineWidth || 1.25;
+
           if (!featureStyle) {
             var stroke = new Stroke({
               color: lineColor || '#3399CC',
@@ -506,18 +536,22 @@ export function mapLayerBuilder(models, config, cache, Parent) {
               stroke: stroke
             });
 
-            if ((width / (resolution * 100)) > width) {
-              width = width / (resolution * 100);
-            }
+            var widthDimensions = scaleFeature(width, resolution);
+            width = widthDimensions.size;
+            // if ((width / (resolution * 100)) > width) {
+            //   width = width / (resolution * 100);
+            // }
 
             stroke.setWidth(width);
             styleCache[lineStyle] = featureStyle;
           }
         });
       }
+
       // The style for this feature is in the cache. Return it as an array
       return featureStyle;
     };
+
     var layer = new LayerVectorTile({
       renderMode: 'vector',
       preload: 1,

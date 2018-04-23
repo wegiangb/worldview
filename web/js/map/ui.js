@@ -22,6 +22,8 @@ import OlInteractionMouseWheelZoom from 'ol/interaction/mousewheelzoom';
 import OlInteractionDragZoom from 'ol/interaction/dragzoom';
 import olExtent from 'ol/extent';
 import olProj from 'ol/proj';
+import Overlay from 'ol/overlay';
+import Olcoordinate from 'ol/coordinate';
 import { MapRotate } from './rotation';
 import { mapDateLineBuilder } from './datelinebuilder';
 import { mapLayerBuilder } from './layerbuilder';
@@ -643,10 +645,48 @@ export function mapui(models, config) {
       }, 200);
     });
 
-    // TEST: Clicking on a vector shows it's attributes in console.
+    var overlay = new Overlay({
+      element: document.getElementById('feature-container'),
+      positioning: 'bottom-center',
+      offset: [0, -10]
+    });
+    map.addOverlay(overlay);
+
     map.on('click', function (e) {
       map.forEachFeatureAtPixel(e.pixel, function (feature, layer) {
-        console.log(feature.getProperties());
+        if (feature) {
+          // TEST: Clicking on a vector shows it's attributes in console.
+          console.log(feature.getProperties());
+          // var element = overlay.getElement();
+          var coordinate = e.coordinate;
+          console.log(coordinate);
+          var title = '';
+          overlay.setPosition(coordinate);
+          // the keys are quoted to prevent renaming in ADVANCED mode.
+
+          var properties;
+          lodashEach(feature.getProperties(), function (value, key) {
+            if (value !== undefined && key !== 'layer') {
+              properties += key + ': ' + value + '<br>';
+            } else if (key === 'layer') {
+              title = value;
+            }
+          });
+
+          var dialogBox = '<div></div>';
+
+          if (dialogBox) {
+            $(dialogBox).dialog('close');
+          }
+
+          $(dialogBox).html(properties)
+            .dialog({
+              height: 300,
+              width: 250,
+              title: title,
+              position: { my: 'right top', at: 'right top', of: window }
+            });
+        }
       });
     });
     return map;
