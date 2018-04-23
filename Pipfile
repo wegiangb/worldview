@@ -1,0 +1,10 @@
+[requires]
+python_version = "2.7.14"
+
+[packages]
+virtualenv = "*"
+isodate = "*"
+six= "*"
+wsgiref ="*"
+xmltodict = "*"
+
