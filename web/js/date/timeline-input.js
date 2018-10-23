@@ -284,9 +284,9 @@ export function timelineInput(models, config, ui) {
     var endDate = models.layers.lastDate();
 
     // Disable arrows if nothing before/after selection
-    if (model.selectedZoom === 4 && ms >= endDate) {
+    if (model.selectedZoom > 3 && ms >= endDate) {
       $incrementBtn.addClass('button-disabled');
-    } else if (model.selectedZoom !== 4 && nd > endDate) {
+    } else if (model.selectedZoom < 4 && nd > endDate) {
       $incrementBtn.addClass('button-disabled');
     } else {
       $incrementBtn.removeClass('button-disabled');
