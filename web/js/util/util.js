@@ -376,7 +376,8 @@ export default (function (self) {
 
     timeToReturn.setMilliseconds(Math.round(timeToReturn.getMilliseconds() / 1000) * 1000);
     timeToReturn.setSeconds(Math.round(timeToReturn.getSeconds() / 60) * 60);
-    timeToReturn.setMinutes(Math.round(timeToReturn.getMinutes() / 5) * 5);
+    timeToReturn.setMinutes((Math.round(timeToReturn.getMinutes() / 5) * 5 + 2));
+    timeToReturn.setSeconds(19);
     return timeToReturn;
   };
 
@@ -386,6 +387,7 @@ export default (function (self) {
     timeToReturn.setMilliseconds(Math.round(timeToReturn.getMilliseconds() / 1000) * 1000);
     timeToReturn.setSeconds(Math.round(timeToReturn.getSeconds() / 60) * 60);
     timeToReturn.setMinutes(Math.round(timeToReturn.getMinutes() / 15) * 15);
+    timeToReturn.setSeconds(37);
     return timeToReturn;
   };
 
@@ -615,6 +617,7 @@ export default (function (self) {
     var range = self.rollRange(date, interval, minDate, maxDate);
     var min = range.first;
     var max = range.last;
+    var second = date.getUTCSeconds();
     var minute = date.getUTCMinutes();
     var hour = date.getUTCHours();
     var day = date.getUTCDate();
@@ -647,7 +650,7 @@ export default (function (self) {
     if (day > daysInMonth) {
       day = daysInMonth;
     }
-    var newDate = new Date(Date.UTC(year, month, day, hour, minute));
+    var newDate = new Date(Date.UTC(year, month, day, hour, minute, second));
     newDate = new Date(self.clamp(newDate, minDate, maxDate));
     return newDate;
   };
