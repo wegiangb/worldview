@@ -20,7 +20,7 @@ export function layersActive(models, ui, config) {
     var currentProjection = models.proj.selected.id;
     var check;
 
-    if (config.parameters.showSubdaily) {
+    if (model.maxZoom >= 4) {
       check = true;
     } else {
       lodashEach(activeLayers, function(activeLayer) {

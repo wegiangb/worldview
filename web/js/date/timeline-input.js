@@ -176,7 +176,7 @@ export function timelineInput(models, config, ui) {
     var max = model.maxDate();
     var date = model[model.activeDate];
     var maxZoom = model.maxZoom;
-    if (config.parameters.showSubdaily) {
+    if (model.maxZoom >= 4) {
       document.getElementById('timeline-header').classList.add('subdaily');
       maxZoom = 6;
     }
