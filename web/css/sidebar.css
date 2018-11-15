@@ -118,16 +118,17 @@ footer .compare-toggle-button {
   overflow: hidden;
 }
 .wv-ab-mode-selection-case {
-  margin: 5px;
+  margin-bottom: 2px;
   color: #fff;
+  display: flex;
+  justify-content: flex-start;
 }
-.wv-ab-mode-selection-case > div {
-  margin-left: 10px;
-}
-.wv-ab-mode-selection-case > div,
-.wv-ab-mode-selection-case h3 {
+/* .wv-ab-mode-selection-case > div {
   display: inline-block;
 }
+.wv-ab-mode-selection-case > div {
+  display: inline-block;
+} */
 
 #productsHolder footer p {
   color: #ccc;

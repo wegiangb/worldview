@@ -20,9 +20,9 @@ class ModeSelection extends React.Component {
       <div
         id="wv-ab-mode-selection-case"
         className="wv-ab-mode-selection-case"
-        style={{ display: isActive ? 'block' : 'none' }}
+        style={{ display: isActive ? 'flex' : 'none' }}
       >
-        <h3>COMPARE MODE:</h3>
+        <p style={{ marginRight: 'auto', marginBottom: '3px' }}>COMPARE MODE:</p>
         <ButtonGroup size="sm">
           <Button
             id="compare-swipe-button"
