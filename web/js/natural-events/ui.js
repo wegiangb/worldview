@@ -391,7 +391,7 @@ export default function naturalEventsUI(models, ui, config, request) {
     });
   };
 
-  var zoomToEvent = function(event, date, isSameEventID) {
+  var zoomToEvent = function(event, date, isSameEventID, rotation) {
     var category = event.categories[0].title;
     var zoom = isSameEventID
       ? ui.map.selected.getView().getZoom()
@@ -428,7 +428,7 @@ export default function naturalEventsUI(models, ui, config, request) {
       );
     }
 
-    return ui.map.animate.fly(coordinates, zoom);
+    return ui.map.animate.fly(coordinates, zoom, rotation);
   };
 
   init();
