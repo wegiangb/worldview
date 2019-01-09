@@ -1,1 +1,1 @@
-<p>Here we'll add the MODIS/Terra Bands 7-2-1 layer. This layer is useful for distinguishing burn scars where vegetation is bright green and burned vegetation shows as red.</p>
+<p>Adding the MODIS/Terra Bands 7-2-1 layer provides more context - this layer is useful for distinguishing burn scars where burned vegetation shows as red and vegetation is bright green.</p>
